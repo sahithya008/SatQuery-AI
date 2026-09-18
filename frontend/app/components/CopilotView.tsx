@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+
 export default function CopilotView({ filePath }: { filePath: string }) {
     const [query, setQuery] = useState<string>('');
     const [loading, setLoading] = useState(false);
@@ -11,16 +13,13 @@ export default function CopilotView({ filePath }: { filePath: string }) {
         if (!filePath) return alert('Please upload satellite imagery in the Dashboard first.');
         setLoading(true);
 
-        const formData = new URLSearchParams();
-        formData.append('query', query);
-        formData.append('image_path', filePath);
-
-        const res = await fetch('http://localhost:8000/api/query', {
+        const res = await fetch(`${API_BASE_URL}/api/copilot`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString(),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, location: filePath }),
         });
         const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Copilot request failed');
         setReport(data);
         setLoading(false);
     };
